@@ -18,7 +18,11 @@ export class AuthController {
       body.password,
       body.clinicName,
     );
-    res.cookie('token', result.token, { httpOnly: true, sameSite: 'lax' });
+    res.cookie('token', result.token, {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+    });
     return result;
   }
 
@@ -28,7 +32,11 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.authService.login(body.email, body.password);
-    res.cookie('token', result.token, { httpOnly: true, sameSite: 'lax' });
+    res.cookie('token', result.token, {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+    });
     return result;
   }
 
