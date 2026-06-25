@@ -1,0 +1,114 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Plan {
+  SOLO
+  CLINIC
+}
+
+enum Role {
+  OWNER
+  PROFESSIONAL
+  RECEPTIONIST
+  ADMIN
+}
+
+enum PatientStatus {
+  LEAD
+  CONTACT
+  SCHEDULED
+  IN_TREATMENT
+  INACTIVE
+}
+
+enum InteractionType {
+  NOTE
+  CALL
+  MESSAGE
+  EMAIL
+}
+
+model Clinic {
+  id               String    @id @default(cuid())
+  name             String
+  plan             Plan      @default(SOLO)
+  stripeCustomerId String?
+  active           Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  users    User[]
+  patients Patient[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(PROFESSIONAL)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clinicId String
+  clinic   Clinic @relation(fields: [clinicId], references: [id])
+
+  interactions Interaction[]
+  tasks        Task[]
+}
+
+model Patient {
+  id        String        @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  origin    String?
+  status    PatientStatus @default(LEAD)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  clinicId String
+  clinic   Clinic @relation(fields: [clinicId], references: [id])
+
+  interactions Interaction[]
+  tasks        Task[]
+}
+
+model Interaction {
+  id        String          @id @default(cuid())
+  type      InteractionType @default(NOTE)
+  content   String
+  createdAt DateTime        @default(now())
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model Task {
+  id        String    @id @default(cuid())
+  title     String
+  dueDate   DateTime?
+  done      Boolean   @default(false)
+  urgent    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  patientId String?
+  patient   Patient? @relation(fields: [patientId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  clinicId String
+}
