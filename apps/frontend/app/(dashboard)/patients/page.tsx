@@ -104,45 +104,82 @@ export default function PatientsPage() {
             Nenhum paciente encontrado.
           </p>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="text-xs text-gray-400 border-b border-gray-100">
-                <th className="text-left px-4 py-3 font-medium">Nome</th>
-                <th className="text-left px-4 py-3 font-medium">Contato</th>
-                <th className="text-left px-4 py-3 font-medium">Origem</th>
-                <th className="text-left px-4 py-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
+          <>
+            {/* Tabela desktop */}
+            <div className="hidden md:block">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-xs text-gray-400 border-b border-gray-100">
+                    <th className="text-left px-4 py-3 font-medium">Nome</th>
+                    <th className="text-left px-4 py-3 font-medium">Contato</th>
+                    <th className="text-left px-4 py-3 font-medium">Origem</th>
+                    <th className="text-left px-4 py-3 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((p) => (
+                    <tr
+                      key={p.id}
+                      onClick={() => router.push(`/patients/${p.id}`)}
+                      className="border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer"
+                    >
+                      <td className="px-4 py-3">
+                        <p className="text-sm font-medium text-gray-900">
+                          {p.name}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-sm text-gray-600">
+                          {p.phone || "—"}
+                        </p>
+                        <p className="text-xs text-gray-400">{p.email || ""}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-sm text-gray-600">
+                          {p.origin || "—"}
+                        </p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLORS[p.status]}`}
+                        >
+                          {STATUS_LABELS[p.status]}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Cards mobile */}
+            <div className="md:hidden divide-y divide-gray-50">
               {filtered.map((p) => (
-                <tr
+                <div
                   key={p.id}
                   onClick={() => router.push(`/patients/${p.id}`)}
-                  className="border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer"
                 >
-                  <td className="px-4 py-3">
+                  <div>
                     <p className="text-sm font-medium text-gray-900">
                       {p.name}
                     </p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="text-sm text-gray-600">{p.phone || "—"}</p>
-                    <p className="text-xs text-gray-400">{p.email || ""}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <p className="text-sm text-gray-600">{p.origin || "—"}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLORS[p.status]}`}
-                    >
-                      {STATUS_LABELS[p.status]}
-                    </span>
-                  </td>
-                </tr>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {p.phone || p.email || "—"}
+                    </p>
+                    {p.origin && (
+                      <p className="text-xs text-gray-300">via {p.origin}</p>
+                    )}
+                  </div>
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_COLORS[p.status]}`}
+                  >
+                    {STATUS_LABELS[p.status]}
+                  </span>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
       </div>
 
