@@ -14,6 +14,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [checking, setChecking] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     async function checkAuth() {
@@ -49,7 +50,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <aside className="w-56 bg-white border-r border-gray-200 flex flex-col py-5 fixed top-0 left-0 bottom-0">
+      <aside className="hidden md:flex md:w-56 bg-white border-r border-gray-200 flex-col py-5 fixed top-0 left-0 bottom-0">
         <div className="flex items-center gap-3 px-5 mb-6">
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-sm">
             ♥
@@ -84,8 +85,68 @@ export default function DashboardLayout({
         </div>
       </aside>
 
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 md:hidden">
+          <div
+            className="absolute inset-0 bg-black bg-opacity-25"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside className="absolute left-0 top-0 bottom-0 w-64 bg-white border-r border-gray-200 p-5">
+            <div className="flex items-center gap-3 px-1 mb-6">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-sm">
+                ♥
+              </div>
+              <span className="text-sm font-medium text-gray-900">CRM Saúde</span>
+            </div>
+
+            <nav className="space-y-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    pathname === item.href
+                      ? "bg-gray-100 text-gray-900 font-medium"
+                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                  }`}
+                >
+                  <span>{item.icon}</span>
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="px-1 mt-4">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-50 w-full transition-colors"
+              >
+                <span>↩</span> Sair
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
       <PlanProvider>
-        <main className="ml-56 flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6 md:ml-56">
+          <div className="flex items-center justify-between mb-4 md:hidden">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-sm">♥</div>
+              <span className="text-sm font-medium text-gray-900">CRM Saúde</span>
+            </div>
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="p-2 rounded-md bg-white border"
+              aria-label="Abrir menu"
+            >
+              ☰
+            </button>
+          </div>
+
+          {children}
+        </main>
       </PlanProvider>
     </div>
   );
