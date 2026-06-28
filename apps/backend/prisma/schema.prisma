@@ -1,6 +1,7 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
+  output          = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -72,6 +73,13 @@ model Patient {
   origin    String?
   status    PatientStatus @default(LEAD)
   notes     String?
+  
+  // Endereço
+  street    String?
+  city      String?
+  state     String?
+  zipCode   String?
+
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 

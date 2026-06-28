@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { usePlan } from "@/lib/plan-context";
-import { UpgradeBlock } from "@/app/components/UpgradeBlock";
+import { UpgradeBlock } from "../../../components/UpgradeBlock";
 
 const STATUS_LABELS: Record<string, string> = {
   LEAD: "Lead",
@@ -39,6 +39,7 @@ const INTERACTION_ICONS: Record<string, string> = {
 export default function PatientProfilePage() {
   const { id } = useParams();
   const router = useRouter();
+  const { isPro } = usePlan();
   const [patient, setPatient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
@@ -47,14 +48,26 @@ export default function PatientProfilePage() {
     content: "",
   });
   const [savingInteraction, setSavingInteraction] = useState(false);
-
-  const { isPro } = usePlan();
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState<any>({});
+  const [savingEdit, setSavingEdit] = useState(false);
 
   async function load() {
     try {
       const res = await api.get(`/patients/${id}`);
       setPatient(res.data);
       setStatus(res.data.status);
+      setEditForm({
+        name: res.data.name || "",
+        phone: res.data.phone || "",
+        email: res.data.email || "",
+        origin: res.data.origin || "",
+        notes: res.data.notes || "",
+        street: res.data.street || "",
+        city: res.data.city || "",
+        state: res.data.state || "",
+        zipCode: res.data.zipCode || "",
+      });
     } finally {
       setLoading(false);
     }
@@ -69,15 +82,24 @@ export default function PatientProfilePage() {
     await api.put(`/patients/${id}`, { status: newStatus });
   }
 
+  async function handleEdit(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingEdit(true);
+    try {
+      await api.put(`/patients/${id}`, editForm);
+      setShowEditModal(false);
+      load();
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
   async function handleAddInteraction(e: React.FormEvent) {
     e.preventDefault();
     if (!newInteraction.content.trim()) return;
     setSavingInteraction(true);
     try {
-      await api.post("/interactions", {
-        ...newInteraction,
-        patientId: id,
-      });
+      await api.post("/interactions", { ...newInteraction, patientId: id });
       setNewInteraction({ type: "NOTE", content: "" });
       load();
     } finally {
@@ -111,7 +133,6 @@ export default function PatientProfilePage() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => router.back()}
@@ -122,14 +143,14 @@ export default function PatientProfilePage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Coluna esquerda — dados do paciente */}
+        {/* Coluna esquerda */}
         <div className="space-y-4">
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-medium text-lg">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-medium text-lg flex-shrink-0">
                 {patient.name.charAt(0).toUpperCase()}
               </div>
-              <div>
+              <div className="flex-1 min-w-0">
                 <h1 className="text-base font-medium text-gray-900">
                   {patient.name}
                 </h1>
@@ -137,22 +158,49 @@ export default function PatientProfilePage() {
                   Cadastrado em {formatDate(patient.createdAt)}
                 </p>
               </div>
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="text-xs text-emerald-600 hover:text-emerald-700 border border-emerald-200 px-2 py-1 rounded-lg flex-shrink-0"
+              >
+                Editar
+              </button>
             </div>
 
             <div className="space-y-2">
               {patient.phone && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="text-gray-300">📞</span> {patient.phone}
+                  <span>📞</span> {patient.phone}
                 </div>
               )}
               {patient.email && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="text-gray-300">✉️</span> {patient.email}
+                  <span>✉️</span> {patient.email}
                 </div>
               )}
               {patient.origin && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="text-gray-300">📍</span> via {patient.origin}
+                  <span>📍</span> via {patient.origin}
+                </div>
+              )}
+              {(patient.street || patient.city) && (
+                <div className="flex items-start gap-2 text-sm text-gray-600">
+                  <span>🏠</span>
+                  <span>
+                    {[patient.street, patient.city, patient.state]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </span>
+                </div>
+              )}
+              {patient.zipCode && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <span>📮</span> CEP: {patient.zipCode}
+                </div>
+              )}
+              {patient.notes && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-400 mb-1">Observações</p>
+                  <p className="text-sm text-gray-600">{patient.notes}</p>
                 </div>
               )}
             </div>
@@ -179,7 +227,6 @@ export default function PatientProfilePage() {
             </div>
           </div>
 
-          {/* Tarefas vinculadas */}
           {patient.tasks?.length > 0 && (
             <div className="bg-white rounded-xl border border-gray-200 p-5">
               <h2 className="text-sm font-medium text-gray-900 mb-3">
@@ -211,17 +258,16 @@ export default function PatientProfilePage() {
           )}
         </div>
 
-        {/* Coluna direita — histórico */}
-        <div className="col-span-2">
+        {/* Coluna direita */}
+        <div className="md:col-span-2">
           {isPro ? (
             <div className="space-y-4">
-              {/* Nova interação */}
               <div className="bg-white rounded-xl border border-gray-200 p-5">
                 <h2 className="text-sm font-medium text-gray-900 mb-3">
                   Registrar interação
                 </h2>
                 <form onSubmit={handleAddInteraction} className="space-y-3">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     {Object.entries(INTERACTION_LABELS).map(
                       ([value, label]) => (
                         <button
@@ -267,7 +313,6 @@ export default function PatientProfilePage() {
                 </form>
               </div>
 
-              {/* Histórico */}
               <div className="bg-white rounded-xl border border-gray-200 p-5">
                 <h2 className="text-sm font-medium text-gray-900 mb-4">
                   Histórico de interações
@@ -310,6 +355,163 @@ export default function PatientProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Modal de edição */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl max-h-screen overflow-y-auto">
+            <h2 className="text-base font-medium text-gray-900 mb-4">
+              Editar paciente
+            </h2>
+            <form onSubmit={handleEdit} className="space-y-3">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">
+                  Nome completo
+                </label>
+                <input
+                  value={editForm.name}
+                  onChange={(e) =>
+                    setEditForm((f: any) => ({ ...f, name: e.target.value }))
+                  }
+                  placeholder="Nome completo"
+                  required
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Telefone
+                  </label>
+                  <input
+                    value={editForm.phone}
+                    onChange={(e) =>
+                      setEditForm((f: any) => ({ ...f, phone: e.target.value }))
+                    }
+                    placeholder="(11) 99999-9999"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    E-mail
+                  </label>
+                  <input
+                    value={editForm.email}
+                    onChange={(e) =>
+                      setEditForm((f: any) => ({ ...f, email: e.target.value }))
+                    }
+                    placeholder="email@exemplo.com"
+                    type="email"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">
+                  Origem
+                </label>
+                <input
+                  value={editForm.origin}
+                  onChange={(e) =>
+                    setEditForm((f: any) => ({ ...f, origin: e.target.value }))
+                  }
+                  placeholder="Instagram, Indicação..."
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">
+                  Endereço
+                </label>
+                <input
+                  value={editForm.street}
+                  onChange={(e) =>
+                    setEditForm((f: any) => ({ ...f, street: e.target.value }))
+                  }
+                  placeholder="Rua, número, complemento"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="col-span-1">
+                  <label className="block text-xs text-gray-500 mb-1">
+                    CEP
+                  </label>
+                  <input
+                    value={editForm.zipCode}
+                    onChange={(e) =>
+                      setEditForm((f: any) => ({
+                        ...f,
+                        zipCode: e.target.value,
+                      }))
+                    }
+                    placeholder="00000-000"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div className="col-span-1">
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Cidade
+                  </label>
+                  <input
+                    value={editForm.city}
+                    onChange={(e) =>
+                      setEditForm((f: any) => ({ ...f, city: e.target.value }))
+                    }
+                    placeholder="São Paulo"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div className="col-span-1">
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Estado
+                  </label>
+                  <input
+                    value={editForm.state}
+                    onChange={(e) =>
+                      setEditForm((f: any) => ({ ...f, state: e.target.value }))
+                    }
+                    placeholder="SP"
+                    maxLength={2}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">
+                  Observações
+                </label>
+                <textarea
+                  value={editForm.notes}
+                  onChange={(e) =>
+                    setEditForm((f: any) => ({ ...f, notes: e.target.value }))
+                  }
+                  placeholder="Informações adicionais..."
+                  rows={3}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none focus:border-emerald-500 resize-none"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 border border-gray-200 text-gray-600 text-sm py-2 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-sm py-2 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {savingEdit ? "Salvando..." : "Salvar"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
