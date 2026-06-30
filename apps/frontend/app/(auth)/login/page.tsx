@@ -41,7 +41,7 @@ export default function LoginPage() {
             <span className="text-white text-lg">♥</span>
           </div>
           <div>
-            <h1 className="text-lg font-medium text-gray-900">CRM Saúde</h1>
+            <h1 className="text-lg font-medium text-gray-900">Clínika</h1>
             <p className="text-sm text-gray-500">Faça login na sua conta</p>
           </div>
         </div>

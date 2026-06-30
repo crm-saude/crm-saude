@@ -65,7 +65,7 @@ export default function AdminPage() {
             ♥
           </div>
           <div>
-            <span className="text-sm font-medium text-gray-900">CRM Saúde</span>
+            <span className="text-sm font-medium text-gray-900">Clínika</span>
             <span className="ml-2 text-xs bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-medium">
               Admin
             </span>

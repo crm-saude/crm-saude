@@ -55,7 +55,7 @@ export default function DashboardLayout({
           <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-sm">
             ♥
           </div>
-          <span className="text-sm font-medium text-gray-900">CRM Saúde</span>
+          <span className="text-sm font-medium text-gray-900">Clínika</span>
         </div>
         <nav className="flex-1 px-3 space-y-1">
           {navItems.map((item) => (
@@ -89,7 +89,7 @@ export default function DashboardLayout({
           <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-xs">
             ♥
           </div>
-          <span className="text-sm font-medium text-gray-900">CRM Saúde</span>
+          <span className="text-sm font-medium text-gray-900">Clínika</span>
         </div>
         <button
           onClick={() => setMenuOpen(!menuOpen)}

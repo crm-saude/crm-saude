@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "CRM Saúde",
+  title: "Clínika",
   description: "CRM para profissionais de saúde",
 };
 
